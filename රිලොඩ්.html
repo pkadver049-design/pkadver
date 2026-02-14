@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reload Pro - Communication</title>
+    <style>
+        :root { --primary: #007bff; --success: #28a745; --dark: #343a40; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; }
+        .app-card { max-width: 450px; margin: auto; background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: var(--primary); color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--dark); }
+        select, input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; }
+        select:focus, input:focus { border-color: var(--primary); }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; color: white; transition: 0.3s; }
+        .btn-save { background: var(--success); margin-top: 10px; }
+        .btn-save:active { transform: scale(0.98); }
+        
+        /* History Section */
+        .history { margin-top: 20px; max-height: 300px; overflow-y: auto; }
+        .history-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; background: #fafafa; margin-bottom: 5px; border-radius: 5px; }
+        .total-banner { background: var(--dark); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-top: 20px; font-size: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="app-card">
+    <div class="header">
+        <h2 style="margin:0;">RELOAD PRO</h2>
+        <small>සියලුම ජාල සඳහා රීලෝඩ් පද්ධතිය</small>
+    </div>
+
+    <div class="content">
+        <div class="input-group">
+            <label>Network</label>
+            <select id="net">
+                <option value="Dialog">Dialog</option>
+                <option value="Mobitel">Mobitel</option>
+                <option value="Hutch">Hutch</option>
+                <option value="Airtel">Airtel</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Mobile Number</label>
+            <input type="tel" id="p_num" placeholder="07XXXXXXXX" maxlength="10">
+        </div>
+
+        <div class="input-group">
+            <label>Amount (Rs.)</label>
+            <input type="number" id="amt" placeholder="0.00">
+        </div>
+
+        <button class="btn btn-save" onclick="processReload()">සටහන් කරන්න (Save)</button>
+
+        <div class="total-banner" id="daily_total">Total: රු. 0.00</div>
+
+        <div class="history" id="log">
+            </div>
+    </div>
+</div>
+
+<script>
+    let totalIncome = 0;
+
+    function processReload() {
+        const network = document.getElementById('net').value;
+        const phone = document.getElementById('p_num').value;
+        const amount = parseFloat(document.getElementById('amt').value);
+
+        // Validation
+        if(phone.length !== 10) {
+            alert("කරුණාකර අංකය පරීක්ෂා කරන්න!");
+            return;
+        }
+        if(isNaN(amount) || amount <= 0) {
+            alert("කරුණාකර මුදල ඇතුළත් කරන්න!");
+            return;
+        }
+
+        // Add to List
+        const log = document.getElementById('log');
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `<span><b>${network}</b>: ${phone}</span> <span>Rs. ${amount.toFixed(2)}</span>`;
+        log.prepend(item);
+
+        // Update Total
+        totalIncome += amount;
+        document.getElementById('daily_total').innerText = "Total: රු. " + totalIncome.toFixed(2);
+
+        // Reset
+        document.getElementById('p_num').value = "";
+        document.getElementById('amt').value = "";
+        
+        alert("රීලෝඩ් එක සාර්ථකව සටහන් විය!");
+    }
+</script>
+
+</body>
+</html>
