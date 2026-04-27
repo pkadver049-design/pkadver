@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PK FM - Studio</title>
+    <style>
+        /* YouTube Dark Theme Colors */
+        :root {
+            --yt-black: #0f0f0f;
+            --yt-sidebar: #1e1e1e;
+            --yt-red: #ff0000;
+            --yt-text: #ffffff;
+            --yt-gray: #aaaaaa;
+        }
+
+        body { 
+            font-family: "Roboto", Arial, sans-serif; 
+            background: var(--yt-black); 
+            color: var(--yt-text); 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        /* Header / Nav Bar */
+        header {
+            background: var(--yt-black);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-section { display: flex; align-items: center; gap: 10px; }
+        #logo-preview { width: 32px; height: 32px; border-radius: 50%; }
+        #display-name { font-size: 18px; font-weight: bold; }
+
+        /* Main Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 24px;
+            padding: 20px;
+            max-width: 1600px;
+            margin: auto;
+        }
+
+        /* Player Area */
+        #display-screen { 
+            width: 100%; 
+            aspect-ratio: 16 / 9;
+            background: #000; 
+            border-radius: 12px; 
+            position: relative; 
+            overflow: hidden;
+        }
+        video#main-player { width: 100%; height: 100%; object-fit: contain; }
+        canvas#visualizer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: none; }
+
+        /* Sidebar Lists */
+        .sidebar { display: flex; flex-direction: column; gap: 20px; }
+        .panel { 
+            background: var(--yt-black); 
+            border: 1px solid #333; 
+            border-radius: 12px; 
+            padding: 10px;
+        }
+        .panel h4 { margin: 0 0 10px 5px; font-size: 14px; color: var(--yt-text); }
+        
+        .list-box { 
+            height: 250px; 
+            overflow-y: auto; 
+            font-size: 13px; 
+        }
+        .item { 
+            padding: 8px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .item:hover { background: #272727; }
+        .active { background: #3f3f3f; color: #fff; font-weight: 500; }
+
+        /* Upload Area */
+        .upload-btn { 
+            background: #272727; 
+            padding: 8px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            display: block; 
+            text-align: center; 
+            font-size: 12px; 
+            margin-bottom: 10px;
+            border: 1px solid #444;
+        }
+        .upload-btn:hover { background: #3f3f3f; }
+        input[type="file"] { display: none; }
+
+        /* Bottom Controls & Settings */
+        .controls-row {
+            grid-column: 1 / -1;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .timer-group { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+        .timer-input { 
+            background: #000; color: #fff; border: 1px solid #444; 
+            padding: 5px; border-radius: 5px; width: 50px; text-align: center;
+        }
+
+        .btn { 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .btn-shuffle { background: #272727; color: white; }
+        .shuffle-on { background: var(--yt-text); color: black; }
+        .btn-next { background: var(--yt-red); color: white; }
+        .btn-mic { background: #272727; color: white; }
+        .mic-on { background: var(--yt-red); }
+
+        .share-btn {
+            padding: 6px 15px;
+            border: none;
+            border-radius: 18px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .share-btn:hover { opacity: 0.8; transform: scale(1.05); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #717171; border-radius: 10px; }
+
+        /* Added Styles for Radio Drama */
+        .drama-schedule {
+            background: #2a1a00;
+            border: 1px solid #ff9900;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo-section">
+        <img id="logo-preview" src="logo.png" alt="Logo">
+        <div id="display-name">PK FM STUDIO</div>
+    </div>
+    <div style="flex-grow: 1; max-width: 400px; margin: 0 20px;">
+        <input type="text" id="name-input" placeholder="ස්ටූඩියෝ නම වෙනස් කරන්න..." style="width:100%; background:#121212; border:1px solid #333; padding:8px 15px; border-radius:20px; color:white;">
+    </div>
+    <div>
+        <label for="logo-input" style="cursor:pointer; font-size: 12px; color: var(--yt-gray);">Change Logo</label>
+        <input type="file" id="logo-input" accept="image/*">
+    </div>
+</header>
+
+<div class="main-container">
+    <div class="player-section">
+        <div id="display-screen">
+            <video id="main-player"></video>
+            <canvas id="visualizer"></canvas>
+        </div>
+        <h2 style="margin-top:15px; font-size: 20px;">PK FM Live Broadcast Stream</h2>
+        <div id="drama-alert" style="color: #ff9900; font-weight: bold; font-size: 14px; margin-top: 5px; display: none;">⚠️ නාට්‍ය දැනුම්දීම: ගුවන් විදුලි නාට්‍යය තව සුළු වෙලාවකින් ආරම්භ වේ!</div>
+        <div style="color: var(--yt-gray); font-size: 14px;">1,042 watching now PK Studio </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="panel" style="border-color: #ff9900;">
+            <h4 style="color: #ff9900;">ගුවන් විදුලි නාට්‍ය (Radio Drama)</h4>
+            <div class="timer-group" style="margin-bottom: 10px;">
+                <span>ප්‍රචාරක වේලාව:</span>
+                <input type="time" id="drama-time" class="timer-input" style="width: 100px;">
+            </div>
+            <label class="upload-btn" style="border-color: #ff9900;">Upload Drama File <input type="file" id="drama-input" accept="audio/*,video/*"></label>
+            <div id="drama-status" style="font-size: 11px; color: #aaa; text-align: center;">නාට්‍යයක් තෝරා වේලාව සකසන්න.</div>
+        </div>
+
+        <div class="panel">
+            <h4>සංගීතය සහ වීඩියෝ</h4>
+            <label class="upload-btn">Upload Music <input type="file" id="music-input" webkitdirectory directory multiple></label>
+            <div class="list-box" id="music-list"></div>
+        </div>
+        
+        <div class="panel">
+            <h4>Jingles & Ads</h4>
+            <div class="list-box" style="height: 150px;">
+                <label class="upload-btn">Upload Jingles <input type="file" id="jingle-input" webkitdirectory directory multiple></label>
+                <div id="jingle-list"></div>
+                <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
+                <label class="upload-btn">Upload Ads <input type="file" id="ad-input" webkitdirectory directory multiple></label>
+                <div id="ad-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls-row">
+        <div class="timer-group">
+            <span>Jingle (Min):</span>
+            <input type="number" id="jingle-timer" class="timer-input" value="5">
+        </div>
+        <div class="timer-group">
+            <span>Ads (Min):</span>
+            <input type="number" id="ad-timer" class="timer-input" value="15">
+        </div>
+        
+        <div style="flex-grow: 1; display: flex; justify-content: center; gap: 15px;">
+            <button id="shuffle-btn" class="btn btn-shuffle">🔀 SHUFFLE</button>
+            <button id="mic-btn" class="btn btn-mic">🎙️ MIC</button>
+            <button class="btn btn-next" onclick="playNext()">⏭️ NEXT TRACK</button>
+        </div>
+    </div>
+</div>
+
+<div class="share-container" style="margin: 20px; display: flex; gap: 10px; align-items: center;">
+    <span style="font-size: 14px; color: var(--yt-gray); margin-right: 10px;">SHARE:</span>
+    <button onclick="shareSocial('facebook')" class="share-btn" style="background: #1877F2;">Facebook</button>
+    <button onclick="shareSocial('whatsapp')" class="share-btn" style="background: #25D366;">WhatsApp</button>
+    <button onclick="shareSocial('twitter')" class="share-btn" style="background: #000000;">X</button>
+    <button onclick="shareSocial('telegram')" class="share-btn" style="background: #0088cc;">Telegram</button>
+    <button onclick="copyLink()" class="share-btn" style="background: #333;">Copy Link</button>
+</div>
+
+<script>
+    const player = document.getElementById('main-player');
+    const visualizer = document.getElementById('visualizer');
+    
+    let db = { music: [], jingles: [], ads: [] };
+    let dramaFile = null;
+    let dramaScheduledTime = null;
+    let dramaAnnounced = false;
+    let dramaStarted = false;
+
+    let state = { 
+        currentIdx: 0, 
+        mode: "MUSIC", 
+        isShuffle: false,
+        lastJingleTime: Date.now(),
+        lastAdTime: Date.now()
+    };
+    let adCounter = 0;
+
+    // Logo and Name settings
+    document.getElementById('logo-input').onchange = (e) => {
+        if(e.target.files[0]) document.getElementById('logo-preview').src = URL.createObjectURL(e.target.files[0]);
+    };
+    document.getElementById('name-input').oninput = (e) => {
+        document.getElementById('display-name').innerText = e.target.value.toUpperCase() || "PK FM STUDIO";
+    };
+
+    document.getElementById('shuffle-btn').onclick = function() {
+        state.isShuffle = !state.isShuffle;
+        this.classList.toggle('shuffle-on');
+    };
+
+    // Radio Drama Logic
+    document.getElementById('drama-input').onchange = (e) => {
+        dramaFile = e.target.files[0];
+        document.getElementById('drama-status').innerText = "නාට්‍යය ඇතුළත් කළා: " + dramaFile.name;
+    };
+
+    document.getElementById('drama-time').onchange = (e) => {
+        dramaScheduledTime = e.target.value;
+        dramaAnnounced = false; // Reset announcement flag when time changes
+        dramaStarted = false;
+    };
+
+    // File Loader
+    function setupLoader(id, key) {
+        document.getElementById(id).onchange = (e) => {
+            const files = Array.from(e.target.files).filter(f => f.type.startsWith('audio/') || f.type.startsWith('video/'));
+            db[key] = [...db[key], ...files];
+            render();
+            if (player.paused && db.music.length > 0) playNext();
+        };
+    }
+    setupLoader('music-input', 'music');
+    setupLoader('jingle-input', 'jingles');
+    setupLoader('ad-input', 'ads');
+
+    function render() {
+        const build = (data, listId, isMusic) => {
+            const list = document.getElementById(listId);
+            list.innerHTML = data.map((f, i) => {
+                const active = (isMusic && state.mode === "MUSIC" && i === state.currentIdx) ? 'active' : '';
+                return `<div class="item ${active}"><span>▶</span> ${f.name.substring(0,30)}</div>`;
+            }).join('');
+        };
+        build(db.music, 'music-list', true);
+        build(db.jingles, 'jingle-list', false);
+        build(db.ads, 'ad-list', false);
+    }
+
+    // Playback Logic
+    function playNext() {
+        // Check if Drama should start (Immediate override)
+        if (dramaStarted) {
+            dramaStarted = false; // Reset to continue normal flow after drama
+        }
+
+        if (db.music.length === 0 && !dramaFile) return;
+        
+        const now = Date.now();
+        const jingleGap = document.getElementById('jingle-timer').value * 60 * 1000;
+        const adGap = document.getElementById('ad-timer').value * 60 * 1000;
+
+        if (db.ads.length > 0 && ( (now - state.lastAdTime >= adGap) || (adCounter > 0 && adCounter < 5) )) {
+            if (adCounter === 0) state.lastAdTime = now;
+            adCounter++;
+            startMedia(db.ads[Math.floor(Math.random() * db.ads.length)], "AD");
+            if (adCounter >= 5) adCounter = 0;
+        } 
+        else if (db.jingles.length > 0 && (now - state.lastJingleTime >= jingleGap)) {
+            state.lastJingleTime = now;
+            startMedia(db.jingles[Math.floor(Math.random() * db.jingles.length)], "JINGLE");
+        } 
+        else {
+            if (state.isShuffle) {
+                state.currentIdx = Math.floor(Math.random() * db.music.length);
+            } else {
+                state.currentIdx = (state.currentIdx + 1) % db.music.length;
+            }
+            if(db.music[state.currentIdx]) startMedia(db.music[state.currentIdx], "MUSIC");
+        }
+    }
+
+    function startMedia(file, mode) {
+        state.mode = mode;
+        const isVideo = file.type.startsWith('video/');
+        player.src = URL.createObjectURL(file);
+        player.style.display = isVideo ? "block" : "none";
+        visualizer.style.display = isVideo ? "none" : "block";
+        if (!isVideo) initVis();
+        render();
+        
+        player.play().then(() => {
+            if (mode === "MUSIC") {
+                announceStationName();
+            }
+        }).catch(e => console.log("Play error"));
+    }
+
+    function announceStationName() {
+        const originalVolume = player.volume;
+        player.volume = 0.2;
+        const msg = new SpeechSynthesisUtterance();
+        msg.text = "P K F M"; 
+        msg.lang = 'en-US'; 
+        msg.rate = 0.9; 
+        msg.onend = function() { player.volume = originalVolume; };
+        window.speechSynthesis.speak(msg);
+    }
+
+    player.onended = playNext;
+
+    // Visualizer Logic
+    let audioCtx, analyser, source;
+    function initVis() {
+        if (audioCtx) return;
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        source = audioCtx.createMediaElementSource(player);
+        source.connect(analyser); analyser.connect(audioCtx.destination);
+        draw();
+    }
+
+    function draw() {
+        requestAnimationFrame(draw);
+        const ctx = visualizer.getContext('2d');
+        const data = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(data);
+        ctx.clearRect(0, 0, visualizer.width, visualizer.height);
+        ctx.fillStyle = '#ff0000';
+        for (let i = 0; i < data.length; i += 10) {
+            let h = (data[i] / 255) * visualizer.height;
+            ctx.fillRect(i * 1.2, visualizer.height - h, 5, h);
+        }
+    }
+
+    // Mic Logic
+    let mic;
+    document.getElementById('mic-btn').onclick = async function() {
+        if (!mic) {
+            mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.innerText = "🎙️ LIVE"; this.classList.add('mic-on');
+        } else {
+            mic.getTracks().forEach(t => t.stop()); mic = null;
+            this.innerText = "🎙️ MIC"; this.classList.remove('mic-on');
+        }
+    };
+
+    // Scheduler and Time Announcer
+    setInterval(() => {
+        const now = new Date();
+        const currentTimeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        
+        // 1. Radio Drama Time Logic
+        if (dramaScheduledTime && dramaFile) {
+            const [sHour, sMin] = dramaScheduledTime.split(':').map(Number);
+            const dramaDate = new Date();
+            dramaDate.setHours(sHour, sMin, 0);
+
+            const diffInMs = dramaDate - now;
+            const diffInMins = Math.floor(diffInMs / (1000 * 60));
+
+            // පැයකට පෙර දැනුම්දීම (Exactly 60 mins before)
+            if (diffInMins === 60 && !dramaAnnounced) {
+                announceDramaReminder(dramaScheduledTime);
+                dramaAnnounced = true;
+                document.getElementById('drama-alert').style.display = "block";
+            }
+
+            // නාට්‍යය ආරම්භ කිරීම
+            if (currentTimeStr === dramaScheduledTime && !dramaStarted) {
+                dramaStarted = true;
+                document.getElementById('drama-alert').style.display = "none";
+                startMedia(dramaFile, "DRAMA");
+            }
+        }
+
+        // 2. Regular Time Announcer
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        if ((minutes === 0 || minutes === 30) && seconds === 0) {
+            announceTime(now.getHours(), minutes);
+        }
+    }, 1000);
+
+    function announceDramaReminder(time) {
+        const originalVolume = player.volume;
+        player.volume = 0.2;
+        const msg = new SpeechSynthesisUtterance();
+        msg.text = `විශේෂ දැනුම්දීමයි. තව පැයකින් එනම් වේලාව ${time} ට පී කේ එෆ් එම් ගුවන් විදුලි නාට්‍යය ආරම්භ වේ. රැඳී සිටින්න අප සමඟ.`;
+        msg.lang = 'si-LK';
+        msg.onend = () => { player.volume = originalVolume; };
+        window.speechSynthesis.speak(msg);
+    }
+
+    function announceTime(hour, minutes) {
+        const originalVolume = player.volume;
+        player.volume = 0.2;
+        const msg = new SpeechSynthesisUtterance();
+        let displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+        let ampm = hour >= 12 ? "පස්වරු" : "පෙරවරු";
+        msg.text = `දැන් වෙලාව ${ampm} ${displayHour} පසුවී විනාඩි ${minutes === 0 ? 'බිංදුවයි' : 'තිහයි'}. ඔබ ශ්‍රවණය කරන්නේ පී කේ එෆ් එම් ස්ටූඩියෝවයි.`;
+        msg.lang = 'si-LK'; 
+        msg.rate = 0.85;
+        msg.onend = () => { player.volume = originalVolume; };
+        window.speechSynthesis.speak(msg);
+    }
+
+    // Sharing Logic
+    function shareSocial(platform) {
+        const url = encodeURIComponent(window.location.href);
+        const text = encodeURIComponent("PK FM Live Studio එකට දැන්ම එකතු වෙන්න! 🎧");
+        let shareUrl = "";
+        switch (platform) {
+            case 'facebook': shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`; break;
+            case 'whatsapp': shareUrl = `https://api.whatsapp.com/send?text=${text}%20${url}`; break;
+            case 'twitter': shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`; break;
+            case 'telegram': shareUrl = `https://t.me/share/url?url=${url}&text=${text}`; break;
+        }
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+
+    function copyLink() {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert("ස්ටූඩියෝ ලින්ක් එක කොපි කරගත්තා!");
+        });
+    }
+</script>
+
+</body>
+</html>
